@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riddle Generator Game</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(to bottom right, #f5efe6, #e7d7c9);
+      color: #3e2f26;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      box-sizing: border-box;
+    }
+
+    .game-container {
+      background-color: white;
+      width: 100%;
+      max-width: 700px;
+      padding: 35px;
+      border-radius: 18px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #6b4226;
+      font-size: 2.2rem;
+    }
+
+    .subtitle {
+      margin-bottom: 25px;
+      font-size: 1rem;
+    }
+
+    .scoreboard {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 25px;
+      font-weight: bold;
+      flex-wrap: wrap;
+    }
+
+    .riddle-box {
+      background-color: #f9f4ef;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .option-btn,
+    .control-btn {
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .option-btn {
+      background-color: #8b5e3c;
+      color: white;
+    }
+
+    .option-btn:hover {
+      background-color: #6f4a2f;
+      transform: translateY(-2px);
+    }
+
+    .control-btn {
+      background-color: #d8b08c;
+      color: #3e2f26;
+      margin: 5px;
+    }
+
+    .control-btn:hover {
+      background-color: #c99a72;
+    }
+
+    .message {
+      font-size: 1.1rem;
+      font-weight: bold;
+      min-height: 28px;
+      margin-bottom: 12px;
+    }
+
+    .win {
+      color: green;
+    }
+
+    .lose {
+      color: #b22222;
+    }
+
+    .back-link {
+      margin-top: 20px;
+      display: inline-block;
+      text-decoration: none;
+      color: #6b4226;
+      font-weight: bold;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .options {
+        grid-template-columns: 1fr;
+      }
+
+      .game-container {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Riddle Generator Game</h1>
+    <p class="subtitle">Answer correctly 3 times in a row to win.</p>
+
+    <div class="scoreboard">
+      <div>Points: <span id="points">0</span></div>
+      <div>Streak: <span id="streak">0</span></div>
+    </div>
+
+    <div class="riddle-box" id="riddle">Press "Start Game" to get a riddle.</div>
+
+    <div class="options" id="options"></div>
+
+    <div class="message" id="message"></div>
+
+    <button class="control-btn" id="startBtn">Start Game</button>
+    <button class="control-btn" id="nextBtn" style="display: none;">Next Riddle</button>
+    <button class="control-btn" id="restartBtn">Restart</button>
+
+    <br />
+    <a class="back-link" href="fromScratch.html">← Back to Scratch Page</a>
+  </div>
+
+  <script>
+    const riddles = [
+      {
+        question: "What has to be broken before you can use it?",
+        options: ["Glass", "Egg", "Phone", "Door"],
+        answer: "Egg"
+      },
+      {
+        question: "What has many keys but cannot open a single lock?",
+        options: ["Map", "Piano", "Keyboard", "Treasure chest"],
+        answer: "Piano"
+      },
+      {
+        question: "What goes up but never comes down?",
+        options: ["Balloon", "Smoke", "Age", "Rocket"],
+        answer: "Age"
+      },
+      {
+        question: "What gets wetter the more it dries?",
+        options: ["Towel", "Rain", "Sponge", "Soap"],
+        answer: "Towel"
+      },
+      {
+        question: "What has hands but cannot clap?",
+        options: ["Clock", "Robot", "Statue", "Tree"],
+        answer: "Clock"
+      },
+      {
+        question: "The more you take, the more you leave behind. What are they?",
+        options: ["Coins", "Footsteps", "Books", "Breaths"],
+        answer: "Footsteps"
+      },
+      {
+        question: "What has one eye but cannot see?",
+        options: ["Storm", "Needle", "Button", "Fish"],
+        answer: "Needle"
+      },
+      {
+        question: "What can travel around the world while staying in the same corner?",
+        options: ["Stamp", "Shadow", "Moon", "Airplane"],
+        answer: "Stamp"
+      }
+    ];
+
+    let points = 0;
+    let streak = 0;
+    let currentRiddle = null;
+    let usedIndexes = [];
+
+    const riddleEl = document.getElementById("riddle");
+    const optionsEl = document.getElementById("options");
+    const messageEl = document.getElementById("message");
+    const pointsEl = document.getElementById("points");
+    const streakEl = document.getElementById("streak");
+    const startBtn = document.getElementById("startBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+
+    function updateScoreboard() {
+      pointsEl.textContent = points;
+      streakEl.textContent = streak;
+    }
+
+    function getRandomRiddle() {
+      if (usedIndexes.length === riddles.length) {
+        usedIndexes = [];
+      }
+
+      let index;
+      do {
+        index = Math.floor(Math.random() * riddles.length);
+      } while (usedIndexes.includes(index));
+
+      usedIndexes.push(index);
+      return riddles[index];
+    }
+
+    function loadRiddle() {
+      currentRiddle = getRandomRiddle();
+      riddleEl.textContent = currentRiddle.question;
+      optionsEl.innerHTML = "";
+      messageEl.textContent = "";
+      messageEl.className = "message";
+
+      currentRiddle.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.classList.add("option-btn");
+        btn.textContent = option;
+        btn.addEventListener("click", () => checkAnswer(option));
+        optionsEl.appendChild(btn);
+      });
+
+      nextBtn.style.display = "none";
+    }
+
+    function disableOptions() {
+      const allButtons = document.querySelectorAll(".option-btn");
+      allButtons.forEach(button => {
+        button.disabled = true;
+        button.style.opacity = "0.7";
+        button.style.cursor = "default";
+      });
+    }
+
+    function checkAnswer(selectedOption) {
+      disableOptions();
+
+      if (selectedOption === currentRiddle.answer) {
+        points++;
+        streak++;
+        updateScoreboard();
+
+        if (streak === 3) {
+          messageEl.textContent = "You win! You got 3 correct in a row!";
+          messageEl.classList.add("win");
+          nextBtn.style.display = "none";
+          return;
+        }
+
+        messageEl.textContent = "Correct! Keep going.";
+        messageEl.classList.add("win");
+      } else {
+        streak = 0;
+        updateScoreboard();
+        messageEl.textContent = `Wrong! The correct answer was "${currentRiddle.answer}". Try again.`;
+        messageEl.classList.add("lose");
+      }
+
+      nextBtn.style.display = "inline-block";
+    }
+
+    function restartGame() {
+      points = 0;
+      streak = 0;
+      currentRiddle = null;
+      usedIndexes = [];
+      updateScoreboard();
+      riddleEl.textContent = 'Press "Start Game" to get a riddle.';
+      optionsEl.innerHTML = "";
+      messageEl.textContent = "";
+      messageEl.className = "message";
+      nextBtn.style.display = "none";
+    }
+
+    startBtn.addEventListener("click", loadRiddle);
+    nextBtn.addEventListener("click", loadRiddle);
+    restartBtn.addEventListener("click", restartGame);
+
+    updateScoreboard();
+  </script>
+</body>
+</html>
